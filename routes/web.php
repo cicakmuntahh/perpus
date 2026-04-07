@@ -26,13 +26,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/dashboard', function () {
         if (auth()->user()->role !== 'admin') abort(403);
         
-        $totalBooks = App\Models\Book::sum('stock');
+        $totalBooks = App\Models\Book::count();
         $totalMembers = App\Models\User::where('role', 'user')->count();
         $borrowedBooks = App\Models\Loan::where('status', 'approved')->count();
         $availableBooks = App\Models\Book::sum('available');
         $popularBooks = App\Models\Book::with('category')->orderBy('rating', 'desc')->take(5)->get();
+        $recentActivities = App\Models\Loan::with(['user', 'book'])
+            ->orderBy('created_at', 'desc')->take(5)->get();
         
-        return view('dashboard.admin', compact('totalBooks', 'totalMembers', 'borrowedBooks', 'availableBooks', 'popularBooks'));
+        return view('dashboard.admin', compact('totalBooks', 'totalMembers', 'borrowedBooks', 'availableBooks', 'popularBooks', 'recentActivities'));
     })->name('dashboard');
     
     Route::get('/books', [App\Http\Controllers\BookController::class, 'index'])->name('books');
@@ -128,8 +130,11 @@ Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
             ->where('status', 'approved')
             ->take(2)
             ->get();
+        $totalBorrowed = App\Models\Loan::where('user_id', auth()->id())->count();
+        $activeLoan = App\Models\Loan::where('user_id', auth()->id())->where('status', 'approved')->count();
+        $totalReturned = App\Models\Loan::where('user_id', auth()->id())->where('status', 'returned')->count();
         
-        return view('dashboard.user', compact('recommendedBooks', 'currentLoans'));
+        return view('dashboard.user', compact('recommendedBooks', 'currentLoans', 'totalBorrowed', 'activeLoan', 'totalReturned'));
     })->name('dashboard');
     
     Route::get('/catalog', [App\Http\Controllers\BookController::class, 'catalog'])->name('catalog');

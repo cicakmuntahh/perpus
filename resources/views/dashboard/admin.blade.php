@@ -182,7 +182,7 @@ Selamat Datang, {{ Auth::user()->name }}! 📚
         <div class="stat-header">
             <div>
                 <div class="stat-value">{{ $totalBooks }}</div>
-                <div class="stat-label">Total Buku</div>
+                <div class="stat-label">Total Judul Buku</div>
             </div>
             <div class="stat-icon purple">📚</div>
         </div>
@@ -212,7 +212,7 @@ Selamat Datang, {{ Auth::user()->name }}! 📚
         <div class="stat-header">
             <div>
                 <div class="stat-value">{{ $availableBooks }}</div>
-                <div class="stat-label">Buku Tersedia</div>
+                <div class="stat-label">Stok Tersedia</div>
             </div>
             <div class="stat-icon green">✅</div>
         </div>
@@ -263,41 +263,34 @@ Selamat Datang, {{ Auth::user()->name }}! 📚
         <div class="card-header">
             <h2 class="card-title">Aktivitas Terbaru</h2>
         </div>
+        @forelse($recentActivities as $activity)
         <div class="activity-item">
-            <div class="activity-icon">📖</div>
+            <div class="activity-icon">
+                @if($activity->status == 'pending') 📋
+                @elseif($activity->status == 'approved') 📖
+                @elseif($activity->status == 'return_pending') ↩️
+                @elseif($activity->status == 'returned') ✅
+                @else ❌
+                @endif
+            </div>
             <div class="activity-content">
-                <h4>Peminjaman baru</h4>
-                <p>John Doe meminjam "Laskar Pelangi"</p>
+                <h4>{{ $activity->user->name }}</h4>
+                <p>
+                    @if($activity->status == 'pending') Mengajukan pinjam
+                    @elseif($activity->status == 'approved') Sedang meminjam
+                    @elseif($activity->status == 'return_pending') Mengajukan kembali
+                    @elseif($activity->status == 'returned') Mengembalikan
+                    @else Ditolak
+                    @endif
+                    "{{ $activity->book->title }}"
+                </p>
             </div>
         </div>
-        <div class="activity-item">
-            <div class="activity-icon">↩️</div>
-            <div class="activity-content">
-                <h4>Pengembalian</h4>
-                <p>Jane Smith mengembalikan "Bumi Manusia"</p>
-            </div>
+        @empty
+        <div style="text-align: center; padding: 2rem; color: #7f8c8d;">
+            Belum ada aktivitas
         </div>
-        <div class="activity-item">
-            <div class="activity-icon">👤</div>
-            <div class="activity-content">
-                <h4>Anggota baru</h4>
-                <p>Mike Johnson mendaftar sebagai anggota</p>
-            </div>
-        </div>
-        <div class="activity-item">
-            <div class="activity-icon">📚</div>
-            <div class="activity-content">
-                <h4>Buku baru ditambahkan</h4>
-                <p>5 buku baru masuk ke koleksi</p>
-            </div>
-        </div>
-        <div class="activity-item">
-            <div class="activity-icon">⚠️</div>
-            <div class="activity-content">
-                <h4>Peringatan keterlambatan</h4>
-                <p>3 buku melewati batas waktu peminjaman</p>
-            </div>
-        </div>
+        @endforelse
     </div>
 </div>
 @endsection

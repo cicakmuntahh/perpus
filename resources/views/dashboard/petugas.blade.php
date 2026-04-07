@@ -310,34 +310,29 @@ Halo, {{ Auth::user()->name }}! 📚
         <div class="card-header">
             <h2 class="card-title">Peringatan</h2>
         </div>
+        @php
+            $overdueLoans = App\Models\Loan::with(['user','book'])
+                ->where('status', 'approved')
+                ->where('due_date', '<', today())
+                ->take(4)->get();
+        @endphp
+        @forelse($overdueLoans as $overdue)
         <div class="notification-item">
             <div class="notification-icon warning">⚠️</div>
             <div class="notification-content">
-                <h4>Buku terlambat dikembalikan</h4>
-                <p>"Perahu Kertas" - 3 hari terlambat</p>
+                <h4>Terlambat: {{ $overdue->book->title }}</h4>
+                <p>{{ $overdue->user->name }} · Jatuh tempo {{ $overdue->due_date->format('d M Y') }}</p>
             </div>
         </div>
-        <div class="notification-item">
-            <div class="notification-icon warning">⚠️</div>
-            <div class="notification-content">
-                <h4>Jatuh tempo besok</h4>
-                <p>5 buku akan jatuh tempo besok</p>
-            </div>
-        </div>
+        @empty
         <div class="notification-item">
             <div class="notification-icon success">✅</div>
             <div class="notification-content">
-                <h4>Pengembalian tepat waktu</h4>
-                <p>"Supernova" dikembalikan hari ini</p>
+                <h4>Tidak ada keterlambatan</h4>
+                <p>Semua peminjaman tepat waktu</p>
             </div>
         </div>
-        <div class="notification-item">
-            <div class="notification-icon info">📚</div>
-            <div class="notification-content">
-                <h4>Stok buku menipis</h4>
-                <p>"Laskar Pelangi" hanya tersisa 2 eksemplar</p>
-            </div>
-        </div>
+        @endforelse
     </div>
 
     <div class="card full-width-card">

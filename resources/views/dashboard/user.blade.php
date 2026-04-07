@@ -242,6 +242,36 @@ Selamat Datang, {{ Auth::user()->name }}! 📚
     </a>
 </div>
 
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card" style="margin-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">{{ $totalBorrowed }}</div>
+                <div style="color: #7f8c8d; font-size: 0.9rem;">Total Peminjaman</div>
+            </div>
+            <div style="width:50px;height:50px;border-radius:12px;background:linear-gradient(135deg,#3498db,#2980b9);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">📋</div>
+        </div>
+    </div>
+    <div class="card" style="margin-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">{{ $activeLoan }}</div>
+                <div style="color: #7f8c8d; font-size: 0.9rem;">Sedang Dipinjam</div>
+            </div>
+            <div style="width:50px;height:50px;border-radius:12px;background:linear-gradient(135deg,#f39c12,#e67e22);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">📖</div>
+        </div>
+    </div>
+    <div class="card" style="margin-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-size: 2rem; font-weight: bold; color: #2c3e50;">{{ $totalReturned }}</div>
+                <div style="color: #7f8c8d; font-size: 0.9rem;">Sudah Dikembalikan</div>
+            </div>
+            <div style="width:50px;height:50px;border-radius:12px;background:linear-gradient(135deg,#2ecc71,#27ae60);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">✅</div>
+        </div>
+    </div>
+</div>
+
 <div class="content-grid">
     <div class="card">
         <div class="card-header">
@@ -298,27 +328,40 @@ Selamat Datang, {{ Auth::user()->name }}! 📚
             <div class="card-header">
                 <h2 class="card-title">Aktivitas Terbaru</h2>
             </div>
+            @php
+                $recentUserLoans = App\Models\Loan::with('book')
+                    ->where('user_id', auth()->id())
+                    ->orderBy('created_at', 'desc')
+                    ->take(4)->get();
+            @endphp
+            @forelse($recentUserLoans as $activity)
             <div class="activity-item">
-                <div class="activity-icon green">📖</div>
+                <div class="activity-icon {{ in_array($activity->status, ['approved','return_pending']) ? 'blue' : ($activity->status == 'returned' ? 'green' : 'purple') }}">
+                    @if($activity->status == 'pending') 📋
+                    @elseif($activity->status == 'approved') 📖
+                    @elseif($activity->status == 'return_pending') ↩️
+                    @elseif($activity->status == 'returned') ✅
+                    @else ❌
+                    @endif
+                </div>
                 <div class="activity-content">
-                    <h4>Meminjam buku</h4>
-                    <p>2 hari yang lalu</p>
+                    <h4>{{ $activity->book->title }}</h4>
+                    <p>
+                        @if($activity->status == 'pending') Menunggu persetujuan
+                        @elseif($activity->status == 'approved') Sedang dipinjam
+                        @elseif($activity->status == 'return_pending') Menunggu konfirmasi kembali
+                        @elseif($activity->status == 'returned') Sudah dikembalikan
+                        @else Ditolak
+                        @endif
+                        · {{ $activity->created_at->diffForHumans() }}
+                    </p>
                 </div>
             </div>
-            <div class="activity-item">
-                <div class="activity-icon blue">↩️</div>
-                <div class="activity-content">
-                    <h4>Mengembalikan buku</h4>
-                    <p>5 hari yang lalu</p>
-                </div>
+            @empty
+            <div style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                Belum ada aktivitas
             </div>
-            <div class="activity-item">
-                <div class="activity-icon purple">⭐</div>
-                <div class="activity-content">
-                    <h4>Menambah favorit</h4>
-                    <p>1 minggu yang lalu</p>
-                </div>
-            </div>
+            @endforelse
         </div>
     </div>
 </div>
